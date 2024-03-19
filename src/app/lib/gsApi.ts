@@ -5,16 +5,16 @@ import { JWT } from 'google-auth-library';
 // https://disquiet.io/@eungwang1203/makerlog/google-sheets%EB%A5%BC-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%B2%A0%EC%9D%B4%EC%8A%A4%EB%A1%9C-%ED%99%9C%EC%9A%A9%ED%95%98%EA%B8%B0-feat-nextjs-1694136357334
 export async function loadGoogleDoc() {
   try {
-    const formattedKey = "".replace(/\\n/g, "\n");
+    const formattedKey = process.env.NEXT_PUBLIC_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
     const serviceAccountAuth = new JWT({
       key: formattedKey,
-      email: "",
+      email: process.env.NEXT_PUBLIC_GOOGLE_SERVICE_MAIL,
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
     const doc = new GoogleSpreadsheet(
-      '1azYhHUyle5Y1hqGkR5xhHtt1nUm6PlYuyw4_2U7J7K4',
+      process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!,
       serviceAccountAuth,
     );
 
