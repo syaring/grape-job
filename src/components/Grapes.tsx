@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 
 import styles from "./Grape.module.css";
-import { loadGoogleDoc } from "@/app/lib/gsApi";
+
+import { getGrapes } from "@/app/lib/gsApi";
 
 const NONE = 'NONE';
 const DONE = 'DONE';
@@ -15,16 +16,35 @@ type TypeGrape = {
 };
 
 export default function Grapes() {
-  useEffect(() => {
-    const doc = loadGoogleDoc();
-
-    console.log(doc);
-  }, []);
-  const grapes: TypeGrape[] = new Array(31).fill(0).map((_, idx) => ({ id: idx, day: idx + 1, status: NONE }));
+  // const grapes: TypeGrape[] = new Array(31).fill(0).map((_, idx) => ({ id: idx, day: idx + 1, status: NONE }));
 
   const newLine = [2, 7, 12, 17, 21, 24, 27, 29];
 
-  const [status, setStatus] = useState<TypeGrape[]>([...grapes]);
+  const [status, setStatus] = useState<TypeGrape[]>([]);
+
+  useEffect (() => {
+    fetchGrapes();
+  }, []);
+
+  const fetchGrapes = async () => {
+    const grapes = await getGrapes();
+
+    const { rows, names } = grapes!;
+
+    const newGrape = [];
+
+    for (let i = 0 ; i < 31 ; i ++ ) {
+      newGrape[i] = {
+        id: i,
+        day: i + 1,
+        status: rows[i].get(names[0]),
+      }
+    }
+
+    setStatus(newGrape);
+  };
+
+  console.log(status);
 
   const handleClickCircle = (idx: number) => {
     const curStatus = status[idx];

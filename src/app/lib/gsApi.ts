@@ -22,9 +22,35 @@ export async function loadGoogleDoc() {
 
     return doc;
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
   }
 };
+
+export async function getGrapes () {
+  try {
+    const doc = await loadGoogleDoc();
+
+    let sheet = doc?.sheetsByTitle["grapes"];
+
+    if (!sheet) {
+      alert("시트가 없습니다!");
+
+      return;
+    }
+
+    const rows = await sheet.getRows();
+    const names = await sheet.headerValues;
+
+    const grapes = rows[0].get(names[0]);
+
+    return {
+      rows,
+      names,
+    };
+  } catch (err) {
+    throw new Error(err);
+  }
+}
 
 export default async function googleSheet(
   req: NextApiRequest,
