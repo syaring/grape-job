@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
-// https://disquiet.io/@eungwang1203/makerlog/google-sheets%EB%A5%BC-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%B2%A0%EC%9D%B4%EC%8A%A4%EB%A1%9C-%ED%99%9C%EC%9A%A9%ED%95%98%EA%B8%B0-feat-nextjs-1694136357334
 export async function loadGoogleDoc() {
   try {
     const formattedKey = process.env.NEXT_PUBLIC_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -40,8 +39,6 @@ export async function getGrapes () {
 
     const rows = await sheet.getRows();
     const names = await sheet.headerValues;
-
-    const grapes = rows[0].get(names[0]);
 
     return {
       rows,

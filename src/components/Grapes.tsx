@@ -16,9 +16,7 @@ type TypeGrape = {
 };
 
 export default function Grapes() {
-  // const grapes: TypeGrape[] = new Array(31).fill(0).map((_, idx) => ({ id: idx, day: idx + 1, status: NONE }));
-
-  const newLine = [2, 7, 12, 17, 21, 24, 27, 29];
+  const newLineIndex = [2, 7, 12, 17, 21, 24, 27, 29];
 
   const [status, setStatus] = useState<TypeGrape[]>([]);
 
@@ -37,14 +35,12 @@ export default function Grapes() {
       newGrape[i] = {
         id: i,
         day: i + 1,
-        status: rows[i].get(names[0]),
+        status: rows[i].get(names[0]) || NONE,
       }
     }
 
     setStatus(newGrape);
   };
-
-  console.log(status);
 
   const handleClickCircle = (idx: number) => {
     const curStatus = status[idx];
@@ -75,7 +71,7 @@ export default function Grapes() {
             >
               {day}
             </span>
-            {newLine.includes(idx) && <br />}
+            {newLineIndex.includes(idx) && <br />}
           </div>
         );
       })}
