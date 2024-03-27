@@ -1,3 +1,10 @@
+.names {
+  display: flex;
+  gap: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
 .grape {
   text-align: center;
 }

@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
@@ -29,7 +28,7 @@ export async function getGrapes () {
   try {
     const doc = await loadGoogleDoc();
 
-    let sheet = doc?.sheetsByTitle["grapes"];
+    const sheet = doc?.sheetsByTitle["grapes"];
 
     if (!sheet) {
       alert("시트가 없습니다!");
@@ -49,48 +48,37 @@ export async function getGrapes () {
   }
 }
 
-export default async function googleSheet(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "POST") {
-    try {
-      const doc = await loadGoogleDoc();
-      if (!doc)
-        return res
-          .status(200)
-          .json({ ok: false, error: "사전등록에 실패했습니다." });
-// "유저등록정보" 라는 이름의 sheet가 존재하는지 확인하고, 없다면 만들어줍니다.
-      let sheet = doc.sheetsByTitle["유저등록정보"];
-      if (!sheet) {
-        sheet = await doc.addSheet({
-          headerValues: ["email", "createdAt"],
-          title: "유저등록정보",
-        });
-      }
-// sheet에서 모든row 정보를 가져옵니다.
-      const rows = await sheet.getRows();
-// 이미 등록된 이메일인지 검증합니다.
-      const isRegistered = rows.some(
-        (row) => row.get("email") === req.body.email
-      );
-      if (isRegistered) {
-        return res
-          .status(200)
-          .json({ ok: false, error: "이미 등록된 이메일입니다." });
-      }
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-      const koreaTimeDiff = 9 * 60 * 60 * 1000;
-// sheet에 새로운 정보를 등록해줍니다.
-      await sheet.addRow({
-        email: req.body.email,
-        createdAt: new Date(utc + koreaTimeDiff).toLocaleString(),
-      });
-      return res.status(200).json({ ok: true });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ error: "Internal server error" });
+const NONE = 'NONE';
+const DONE = 'DONE';
+const HALF = 'HALF';
+
+export async function postGrapeStatus ({
+  value,
+  col,
+  row,
+}: {
+  value: typeof NONE | typeof DONE | typeof HALF,
+  col: number,
+  row: number,
+}) {
+  try {
+    const doc = await loadGoogleDoc();
+
+    const sheet = doc?.sheetsByTitle["grapes"];
+    await sheet.loadCells('A1:D35')
+
+    if (!sheet) {
+      alert("시트가 없습니다!");
+
+      return;
     }
+
+    const cell = await sheet.getCell(row, col);
+
+    cell.value = value;
+
+    await sheet.saveUpdatedCells();
+  } catch (err) {
+    throw new Error(err);
   }
 }
