@@ -1,6 +1,5 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import Error from 'next/error';
 
 export async function loadGoogleDoc() {
   try {
@@ -49,16 +48,21 @@ export async function getGrapes () {
   }
 }
 
-const NONE = 'NONE';
-const DONE = 'DONE';
-const HALF = 'HALF';
+const RES_TYPE = {
+  NONE: 0,
+  DONE: 1,
+  HALF: 0.5,
+};
+
+type TypeKey = keyof typeof RES_TYPE;
+type TypeValue = typeof RES_TYPE[TypeKey];
 
 export async function postGrapeStatus ({
   value,
   col,
   row,
 }: {
-  value: typeof NONE | typeof DONE | typeof HALF,
+  value: TypeValue,
   col: number,
   row: number,
 }) {
@@ -66,7 +70,7 @@ export async function postGrapeStatus ({
     const doc = await loadGoogleDoc();
 
     const sheet = doc?.sheetsByTitle["grapes"];
-    await sheet?.loadCells('A1:D35')
+    await sheet?.loadCells('A1:D32')
 
     if (!sheet) {
       alert("시트가 없습니다!");

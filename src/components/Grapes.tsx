@@ -6,15 +6,27 @@ import { getGrapes, postGrapeStatus } from "@/app/lib/gsApi";
 
 import styles from "./Grape.module.css";
 
-const NONE = 'NONE';
-const DONE = 'DONE';
-const HALF = 'HALF';
+const RES_TYPE = {
+  NONE: 0,
+  DONE: 1,
+  HALF: 0.5,
+};
+
+type TypeKey = keyof typeof RES_TYPE;
+type TypeValue = typeof RES_TYPE[TypeKey];
+
+const GRAPE_PALLETTE: { [key: TypeValue]: TypeKey } = {
+  0: 'NONE',
+  1: 'DONE',
+  0.5: 'HALF',
+}
+
 const NEW_LINE_INDEX = [2, 7, 12, 17, 21, 24, 27, 29];
 
 type TypeGrape = {
   id: number;
   day: number;
-  status: typeof NONE | typeof DONE | typeof HALF;
+  status: TypeValue;
 };
 
 export default function Grapes() {
@@ -39,13 +51,17 @@ export default function Grapes() {
 
   useEffect(() => {
     if (nameIndex !== null) {
-      const newGrape = [];
+      const newGrape: {
+        id: number;
+        day: number;
+        status: TypeValue;
+      }[] = [];
 
       for (let i = 0 ; i < 31 ; i ++ ) {
         newGrape[i] = {
           id: i,
           day: i + 1,
-          status: rows[i]?.get(names[nameIndex]) || NONE,
+          status: rows[i]?.get(names[nameIndex]) || RES_TYPE.NONE,
         }
       }
 
@@ -55,14 +71,14 @@ export default function Grapes() {
 
   const handleClickCircle = async (idx: number) => {
     const curStatus = status[idx];
-    let nextStatus: typeof NONE | typeof DONE | typeof HALF = NONE;
+    let nextStatus: TypeValue;
 
-    if (curStatus.status === NONE) {
-      nextStatus = DONE;
-    } else if (curStatus.status === DONE) {
-      nextStatus = HALF;
+    if (curStatus.status === RES_TYPE.NONE) {
+      nextStatus = RES_TYPE.DONE;
+    } else if (curStatus.status === RES_TYPE.DONE) {
+      nextStatus = RES_TYPE.HALF;
     } else {
-      nextStatus = NONE;
+      nextStatus = RES_TYPE.NONE;
     }
 
     const newStatus = [...status];
@@ -100,7 +116,7 @@ export default function Grapes() {
         return (
           <div key={idx} style={{ display: 'inline' }}>
             <span
-              className={`${styles.circles} ${styles[status]}`}
+              className={`${styles.circles} ${styles[GRAPE_PALLETTE[status]]}`}
               onMouseDown={() => handleClickCircle(idx)}
             >
               {day}
