@@ -1,5 +1,6 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import Error from 'next/error';
 
 export async function loadGoogleDoc() {
   try {
@@ -20,7 +21,7 @@ export async function loadGoogleDoc() {
 
     return doc;
   } catch (error) {
-    throw new Error(error);
+    alert(error);
   }
 };
 
@@ -43,8 +44,8 @@ export async function getGrapes () {
       rows,
       names,
     };
-  } catch (err) {
-    throw new Error(err);
+  } catch (error) {
+    alert(error);
   }
 }
 
@@ -65,7 +66,7 @@ export async function postGrapeStatus ({
     const doc = await loadGoogleDoc();
 
     const sheet = doc?.sheetsByTitle["grapes"];
-    await sheet.loadCells('A1:D35')
+    await sheet?.loadCells('A1:D35')
 
     if (!sheet) {
       alert("시트가 없습니다!");
@@ -78,7 +79,7 @@ export async function postGrapeStatus ({
     cell.value = value;
 
     await sheet.saveUpdatedCells();
-  } catch (err) {
-    throw new Error(err);
+  } catch (error) {
+    alert(error);
   }
 }
