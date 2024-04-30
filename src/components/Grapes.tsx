@@ -51,17 +51,13 @@ export default function Grapes() {
 
   useEffect(() => {
     if (nameIndex !== null) {
-      const newGrape: {
-        id: number;
-        day: number;
-        status: TypeValue;
-      }[] = [];
+      const newGrape: TypeGrape[] = [];
 
       for (let i = 0 ; i < 31 ; i ++ ) {
         newGrape[i] = {
           id: i,
           day: i + 1,
-          status: rows[i]?.get(names[nameIndex]) || RES_TYPE.NONE,
+          status: +(rows[i]?.get(names[nameIndex])) || RES_TYPE.NONE,
         }
       }
 
