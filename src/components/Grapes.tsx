@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import { GoogleSpreadsheetRow } from "google-spreadsheet";
+import { ThreeDots } from "react-loader-spinner";
 
 import { getGrapes, postGrapeStatus } from "@/app/lib/gsApi";
 
@@ -35,18 +36,28 @@ export default function Grapes() {
   const [rows, setRows] = useState<GoogleSpreadsheetRow<Record<string, any>>[]>([]);
   const [nameIndex, setNameIndex] = useState<number | null>(null);
 
+  const [showLoader, setShowLoader] = useState(false);
+
   useEffect (() => {
     fetchGrapes();
   }, []);
 
   const fetchGrapes = async () => {
-    const grapes = await getGrapes();
+    setShowLoader(true);
 
-    const { rows, names: headers } = grapes!;
+    try {
+      const grapes = await getGrapes();
 
-    setNames(headers);
-    setRows(rows);
-    setNameIndex(0);
+      const { rows, names: headers } = grapes!;
+
+      setNames(headers);
+      setRows(rows);
+      setNameIndex(0);
+    } catch (e) {
+      alert(e);
+    } finally {
+      setShowLoader(false);
+    }
   };
 
   useEffect(() => {
@@ -82,25 +93,29 @@ export default function Grapes() {
 
     setStatus([...newStatus]);
 
+    setShowLoader(true);
+
     await postGrapeStatus({
       value: nextStatus,
       col: nameIndex!,
       row: idx + 1,
     });
+
+    setShowLoader(false);
   };
 
   return (
     <div className={styles.grape}>
-    <div className={styles.names}>
-      {names.map((n, i) => (
-        <span
-          key={n}
-          onMouseDown={() => setNameIndex(i)}
-        >
-          {n}
-        </span>
-      ))}
-    </div>
+      <div className={styles.names}>
+        {names.map((n, i) => (
+          <span
+            key={n}
+            onMouseDown={() => setNameIndex(i)}
+          >
+            {n}
+          </span>
+        ))}
+      </div>
       <h2>
         {nameIndex !== null && (
           <>
@@ -121,6 +136,19 @@ export default function Grapes() {
           </div>
         );
       })}
+      {showLoader && (
+        <div className={styles.spiinerWrapper}>
+          <ThreeDots
+            visible={showLoader}
+            height="80"
+            width="80"
+            color="#b928e6"
+            radius="9"
+            ariaLabel="three-dots-loading"
+            wrapperClass={styles.spinner}
+          />
+        </div>
+      )}
     </div>
   );
 }
