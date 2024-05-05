@@ -26,7 +26,7 @@ const GRAPE_INDEX = new Array(31).fill(1).map((_, i) => i + 1);
 const NEW_LINE_INDEX = [3, 8, 13, 18, 22, 25, 28, 30];
 
 export default function Grapes() {
-  const [showLoader, setShowLoader] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
 
   const [grape, setGrape] = useState<any>(null);
   const [names, setNames] = useState<string[]>([]);
@@ -38,6 +38,8 @@ export default function Grapes() {
   }, []);
 
   const handleClickCircle = async (header: number, status: number) => {
+    setShowLoader(true);
+
     const curStatus = status;
     let nextStatus: number;
 
@@ -48,8 +50,6 @@ export default function Grapes() {
     } else {
       nextStatus = RES_TYPE.NONE;
     }
-
-    setShowLoader(true);
 
     await grape.upadateSheet(personalIndex, header.toString(), nextStatus);
 
@@ -74,9 +74,9 @@ export default function Grapes() {
   };
 
   const fetchPersonalGrape = async (name: Option) => {
-    const idx = names.findIndex((n) => n === name.value);
-
     setShowLoader(true);
+
+    const idx = names.findIndex((n) => n === name.value);
 
     const personalGrape = await grape.getPersonalData(idx);
 
