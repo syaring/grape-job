@@ -1,10 +1,12 @@
 "use client"
 import { useEffect, useState } from "react";
 import { ThreeDots } from "react-loader-spinner";
+import DropDown, { Option } from "react-dropdown";
 
 import { Grape } from "@/app/lib/gsApi";
 
 import styles from "./Grape.module.css";
+import "react-dropdown/style.css";
 
 const RES_TYPE = {
   NONE: 0,
@@ -71,7 +73,9 @@ export default function Grapes() {
     setShowLoader(false);
   };
 
-  const fetchPersonalGrape = async (idx: number) => {
+  const fetchPersonalGrape = async (name: Option) => {
+    const idx = names.findIndex((n) => n === name.value);
+
     setShowLoader(true);
 
     const personalGrape = await grape.getPersonalData(idx);
@@ -84,15 +88,13 @@ export default function Grapes() {
 
   return (
     <div className={styles.grape}>
-      {names.map((name, i) => (
-        <button
-          key={name}
-          onMouseDown={() => fetchPersonalGrape(i)}
-          className={styles.name}
-        >
-          {name}
-        </button>
-      ))}
+      {names && (
+        <DropDown
+          options={names}
+          onChange={(name) => fetchPersonalGrape(name)}
+          placeholder="알갱이 이름을 선택하세요"
+        />
+      )}
       {personalGrape && (
         <div className={styles.cluster}>
           {GRAPE_INDEX.map((idx) => {
