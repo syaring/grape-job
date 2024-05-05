@@ -1,9 +1,8 @@
 "use client"
 import { useEffect, useState } from "react";
-import { GoogleSpreadsheetRow } from "google-spreadsheet";
 import { ThreeDots } from "react-loader-spinner";
 
-import { getGrapes, postGrapeStatus } from "@/app/lib/gsApi";
+import { Grape } from "@/app/lib/gsApi";
 
 import styles from "./Grape.module.css";
 
@@ -14,130 +13,107 @@ const RES_TYPE = {
 };
 
 type TypeKey = keyof typeof RES_TYPE;
-type TypeValue = typeof RES_TYPE[TypeKey];
 
-const GRAPE_PALLETTE: { [key: TypeValue]: TypeKey } = {
+const GRAPE_PALLETTE: { [key: number]: TypeKey } = {
   0: 'NONE',
   1: 'DONE',
   0.5: 'HALF',
 }
 
-const NEW_LINE_INDEX = [2, 7, 12, 17, 21, 24, 27, 29];
-
-type TypeGrape = {
-  id: number;
-  day: number;
-  status: TypeValue;
-};
+const GRAPE_INDEX = new Array(31).fill(1).map((_, i) => i + 1);
+const NEW_LINE_INDEX = [3, 8, 13, 18, 22, 25, 28, 30];
 
 export default function Grapes() {
-  const [status, setStatus] = useState<TypeGrape[]>([]);
-  const [names, setNames] = useState<string[]>([]);
-  const [rows, setRows] = useState<GoogleSpreadsheetRow<Record<string, any>>[]>([]);
-  const [nameIndex, setNameIndex] = useState<number | null>(null);
-
   const [showLoader, setShowLoader] = useState(false);
+
+  const [grape, setGrape] = useState<any>(null);
+  const [names, setNames] = useState<string[]>([]);
+  const [personalIndex, setPersonalIndex] = useState<number | null>(null); // 행 인덱스와 일치
+  const [personalGrape, setPersonalGrape] = useState<{ [key: string]: string } | null>(null);
 
   useEffect (() => {
     fetchGrapes();
   }, []);
 
-  const fetchGrapes = async () => {
-    setShowLoader(true);
+  const handleClickCircle = async (header: number, status: number) => {
+    const curStatus = status;
+    let nextStatus: number;
 
-    try {
-      const grapes = await getGrapes();
-
-      const { rows, names: headers } = grapes!;
-
-      setNames(headers);
-      setRows(rows);
-      setNameIndex(0);
-    } catch (e) {
-      alert(e);
-    } finally {
-      setShowLoader(false);
-    }
-  };
-
-  useEffect(() => {
-    if (nameIndex !== null) {
-      const newGrape: TypeGrape[] = [];
-
-      for (let i = 0 ; i < 31 ; i ++ ) {
-        newGrape[i] = {
-          id: i,
-          day: i + 1,
-          status: +(rows[i]?.get(names[nameIndex])) || RES_TYPE.NONE,
-        }
-      }
-
-      setStatus(newGrape);
-    }
-  }, [nameIndex]);
-
-  const handleClickCircle = async (idx: number) => {
-    const curStatus = status[idx];
-    let nextStatus: TypeValue;
-
-    if (curStatus.status === RES_TYPE.NONE) {
+    if (curStatus === RES_TYPE.NONE) {
       nextStatus = RES_TYPE.DONE;
-    } else if (curStatus.status === RES_TYPE.DONE) {
+    } else if (curStatus === RES_TYPE.DONE) {
       nextStatus = RES_TYPE.HALF;
     } else {
       nextStatus = RES_TYPE.NONE;
     }
 
-    const newStatus = [...status];
-    newStatus[idx].status = nextStatus;
-
-    setStatus([...newStatus]);
-
     setShowLoader(true);
 
-    await postGrapeStatus({
-      value: nextStatus,
-      col: nameIndex!,
-      row: idx + 1,
+    await grape.upadateSheet(personalIndex, header.toString(), nextStatus);
+
+    setPersonalGrape({
+      ...personalGrape,
+      [header]: nextStatus.toString(),
     });
+
+    setShowLoader(false);
+  };
+
+  const fetchGrapes = async () => {
+    setShowLoader(true);
+
+    const g = new Grape();
+    await g.initialize();
+
+    setGrape(g);
+    setNames(g.getNames());
+
+    setShowLoader(false);
+  };
+
+  const fetchPersonalGrape = async (idx: number) => {
+    setShowLoader(true);
+
+    const personalGrape = await grape.getPersonalData(idx);
+
+    setPersonalGrape(personalGrape);
+    setPersonalIndex(idx);
 
     setShowLoader(false);
   };
 
   return (
     <div className={styles.grape}>
-      <div className={styles.names}>
-        {names.map((n, i) => (
-          <span
-            key={n}
-            onMouseDown={() => setNameIndex(i)}
-          >
-            {n}
-          </span>
-        ))}
-      </div>
-      <h2>
-        {nameIndex !== null && (
-          <>
-            {names[nameIndex]}의 🍇
-          </>
-        )}
-      </h2>
-      {status.map(({ day, status }, idx) => {
-        return (
-          <div key={idx} style={{ display: 'inline' }}>
-            <span
-              className={`${styles.circles} ${styles[GRAPE_PALLETTE[status]]}`}
-              onMouseDown={() => handleClickCircle(idx)}
-            >
-              {day}
-            </span>
-            {NEW_LINE_INDEX.includes(idx) && <br />}
-          </div>
-        );
-      })}
+      {names.map((name, i) => (
+        <button
+          key={name}
+          onMouseDown={() => fetchPersonalGrape(i)}
+          className={styles.name}
+        >
+          {name}
+        </button>
+      ))}
+      {personalGrape && (
+        <div className={styles.cluster}>
+          {GRAPE_INDEX.map((idx) => {
+            const status: number = +personalGrape?.[idx];
+
+            return (
+              <div key={idx} style={{ display: 'inline' }}>
+                <span
+                  className={`${styles.circles} ${styles[GRAPE_PALLETTE[status] || 'WRONG']}`}
+                  onMouseDown={() => handleClickCircle(idx, status)}
+                >
+                  {idx}
+                </span>
+                {NEW_LINE_INDEX.includes(idx) && <br />}
+              </div>
+            );
+          })}
+        </div>
+      )}
       {showLoader && (
-        <div className={styles.spiinerWrapper}>
+        <div className={styles.spinerWrapper}>
           <ThreeDots
             visible={showLoader}
             height="80"

@@ -1,8 +1,18 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { GoogleSpreadsheet, GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
-export async function loadGoogleDoc() {
-  try {
+export class Grape {
+  private doc: GoogleSpreadsheet | null;
+  private sheet: GoogleSpreadsheetWorksheet | null;
+  private rows: GoogleSpreadsheetRow<Record<string, any>>[] | null;
+
+  constructor() {
+    this.doc = null;
+    this.sheet = null;
+    this.rows = null;
+  }
+
+  async initialize() {
     const formattedKey = process.env.NEXT_PUBLIC_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
     const serviceAccountAuth = new JWT({
@@ -11,79 +21,78 @@ export async function loadGoogleDoc() {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    const doc = new GoogleSpreadsheet(
+
+    this.doc = new GoogleSpreadsheet(
       process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID!,
       serviceAccountAuth,
     );
 
-    await doc.loadInfo();
+    await this.doc.loadInfo();
 
-    return doc;
-  } catch (error) {
-    alert(error);
+    if (this.doc) {
+      this.sheet = this.doc.sheetsByTitle["grapes"];
+    }
+
+    if (this.sheet) {
+      this.rows = await this.sheet.getRows();
+    }
   }
-};
 
-export async function getGrapes () {
-  try {
-    const doc = await loadGoogleDoc();
+  getRows() {
+    return this.rows;
+  }
 
-    const sheet = doc?.sheetsByTitle["grapes"];
+  getNames(): string[] {
+    if (!this.sheet) {
+      alert('포도알 시트를 불러올 수 없습니다. 다시 시도해주세요.');
 
-    if (!sheet) {
-      alert("시트가 없습니다!");
+      return [];
+    }
+
+    if (!this.rows) {
+      alert('포도알 행 정보를 불러올 수 없습니다. 다시 시도해주세요.');
+
+      return [];
+    }
+
+    return this.rows.map((row) => row.get('name'));
+  }
+
+  async getPersonalData(headerIndex: number) {
+    if (!this.sheet) {
+      alert('시트를 불러올 수 없습니다. 다시 시도해주세요.');
 
       return;
     }
 
-    const rows = await sheet.getRows();
-    const names = await sheet.headerValues;
+    if (!this.rows) {
+      alert('포도알 행 정보를 불러올 수 없습니다. 다시 시도해주세요.');
 
-    return {
-      rows,
-      names,
-    };
-  } catch (error) {
-    alert(error);
+      return [];
+    }
+
+    return this.rows[headerIndex].toObject();
   }
-}
 
-const RES_TYPE = {
-  NONE: 0,
-  DONE: 1,
-  HALF: 0.5,
-};
-
-type TypeKey = keyof typeof RES_TYPE;
-type TypeValue = typeof RES_TYPE[TypeKey];
-
-export async function postGrapeStatus ({
-  value,
-  col,
-  row,
-}: {
-  value: TypeValue,
-  col: number,
-  row: number,
-}) {
-  try {
-    const doc = await loadGoogleDoc();
-
-    const sheet = doc?.sheetsByTitle["grapes"];
-    await sheet?.loadCells('A1:D32')
-
-    if (!sheet) {
-      alert("시트가 없습니다!");
+  async upadateSheet(rowIndex: number, header: string, value: number) {
+    if (!this.sheet) {
+      alert('시트를 불러올 수 없습니다. 다시 시도해주세요.');
 
       return;
     }
 
-    const cell = await sheet.getCell(row, col);
+    if (!this.rows) {
+      alert('포도알 행 정보를 불러올 수 없습니다. 다시 시도해주세요.');
 
-    cell.value = value;
+      return [];
+    }
 
-    await sheet.saveUpdatedCells();
-  } catch (error) {
-    alert(error);
+    this.rows[rowIndex].set(header, value);
+
+    try {
+      await this.rows[rowIndex].save();
+    } catch (error) {
+      alert('포도알 업데이트 중 오류가 발생했습니다! 새로고침 후 다시 시도해주세요!');
+    }
   }
 }
