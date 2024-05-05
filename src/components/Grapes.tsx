@@ -98,12 +98,12 @@ export default function Grapes() {
       {personalGrape && (
         <div className={styles.cluster}>
           {GRAPE_INDEX.map((idx) => {
-            const status: number = +personalGrape?.[idx];
+            const status: number = +personalGrape?.[idx] || 0;
 
             return (
               <div key={idx} style={{ display: 'inline' }}>
                 <span
-                  className={`${styles.circles} ${styles[GRAPE_PALLETTE[status] || 'WRONG']}`}
+                  className={`${styles.circles} ${styles[GRAPE_PALLETTE[status]]}`}
                   onMouseDown={() => handleClickCircle(idx, status)}
                 >
                   {idx}
