@@ -1,5 +1,6 @@
 import Grapes from "@/components/Grapes";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/react';
 
 export default async function Home() {
   return (
@@ -9,6 +10,7 @@ export default async function Home() {
         </div>
         <Grapes />
         <SpeedInsights />
+        <Analytics />
       </div>
   );
 }
