@@ -22,6 +22,14 @@
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
+.DONE {
+  background-color: red;
+}
+
+.HALF {
+  background-color: yellow;
+}
+
 .cluster {
   text-align: center;
   padding-top: 30px;
