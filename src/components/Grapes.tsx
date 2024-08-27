@@ -68,7 +68,10 @@ export default function Grapes() {
     await g.initialize();
 
     setGrape(g);
-    setNames(g.getNames());
+
+    const grapeNames = g.getNames().filter((n) => !!n);
+
+    setNames(grapeNames);
 
     setShowLoader(false);
   };
